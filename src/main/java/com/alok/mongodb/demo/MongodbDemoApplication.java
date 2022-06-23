@@ -7,7 +7,9 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -15,6 +17,8 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 
 @SpringBootApplication
 public class MongodbDemoApplication implements ApplicationRunner {
@@ -110,12 +114,6 @@ public class MongodbDemoApplication implements ApplicationRunner {
 			), SampleCollection.class).stream()
 					.forEach(System.out::println);
 
-			System.out.println("Get all from 2022-04 or 2022-05");
-			mongoTemplate.find(Query.query(
-					Criteria.where("yM").in("2022-04", "2022-05")
-			), SampleCollection.class).stream()
-					.forEach(System.out::println);
-
 			System.out.println("Get all from 2022-04 and 2022-05 and Alok Singh and tv");
 			mongoTemplate.find(Query.query(
 					Criteria.where("sampleName").is("Alok Singh")
@@ -123,6 +121,70 @@ public class MongodbDemoApplication implements ApplicationRunner {
 							.and("yM").in("2022-04", "2022-05")
 			), SampleCollection.class).stream()
 					.forEach(System.out::println);
+
+			System.out.println("Get all from 2022-04 or 2022-05");
+			mongoTemplate.find(Query.query(
+					Criteria.where("yM").in("2022-04", "2022-05")
+			).with(Sort.by("sampleName","abc").descending()), SampleCollection.class)
+					.stream()
+					.forEach(System.out::println);
+
+
+			int offset = 3;
+			int page = 1;
+			System.out.println("Get all from 2022-04 or 2022-05 - page 1");
+			mongoTemplate.find(Query.query(
+					Criteria.where("yM").in("2022-04", "2022-05")
+			).with(Sort.by("sampleName","abc").descending()).limit(offset).skip(page > 0 ? ( ( page - 1 ) * offset ) : 0),
+					SampleCollection.class)
+					.stream()
+					.forEach(System.out::println);
+
+			page = 2;
+			System.out.println("Get all from 2022-04 or 2022-05 - page 2");
+			mongoTemplate.find(Query.query(
+					Criteria.where("yM").in("2022-04", "2022-05")
+					).with(Sort.by("sampleName","abc").descending()).limit(offset).skip(page > 0 ? ( ( page - 1 ) * offset ) : 0),
+					SampleCollection.class)
+					.stream()
+					.forEach(System.out::println);
+
+			page = 3;
+			System.out.println("Get all from 2022-04 or 2022-05 - page 3");
+			mongoTemplate.find(Query.query(
+					Criteria.where("yM").in("2022-04", "2022-05")
+					).with(Sort.by("sampleName","abc").descending()).limit(offset).skip(page > 0 ? ( ( page - 1 ) * offset ) : 0),
+					SampleCollection.class)
+					.stream()
+					.forEach(System.out::println);
+
+			page = 4;
+			System.out.println("Get all from 2022-04 or 2022-05 - page 4");
+			mongoTemplate.find(Query.query(
+					Criteria.where("yM").in("2022-04", "2022-05")
+					).with(Sort.by("sampleName","abc").descending()).limit(offset).skip(page > 0 ? ( ( page - 1 ) * offset ) : 0),
+					SampleCollection.class)
+					.stream()
+					.forEach(System.out::println);
+
+			// Agreegate by abc
+			GroupOperation groupByAbcAndSumSum = Aggregation.group("abc")
+					.sum("sum").as("sum");
+			MatchOperation matchYears = Aggregation.match(Criteria.where("yM").in("2022-04", "2022-05"));
+			//ProjectionOperation projectRequired = Aggregation.project("sampleName", "abc", "sum");
+			SortOperation sortByPopDesc = Aggregation.sort(Sort.by(Sort.Direction.DESC, "abc"));
+
+			//Aggregation aggregation = Aggregation.newAggregation(matchYears, projectRequired);
+
+			Aggregation aggregation = Aggregation.newAggregation(
+					groupByAbcAndSumSum, matchYears, sortByPopDesc);
+
+			AggregationResults<SampleCollection> aggregationResult = mongoTemplate.aggregate(
+					aggregation, "sampleCollection",
+					SampleCollection.class
+			);
+
+			aggregationResult.getMappedResults().stream().forEach(System.out::println);
 		}
 	}
 }
