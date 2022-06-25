@@ -13,7 +13,8 @@ import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-import java.sql.Timestamp;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +36,7 @@ public class MongodbDemoApplication implements ApplicationRunner {
 
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
+		//sampleCollectionRepository.deleteAll();
 		long numOfCollections = sampleCollectionRepository.count();
 
 		if (numOfCollections == 0) {
@@ -48,9 +50,9 @@ public class MongodbDemoApplication implements ApplicationRunner {
 						.abcGroup("appliances")
 						.abc("tv")
 						.goal("service")
-						.yM("2022-04")
+						.yM(YearMonth.of(2022, 4))
 						.currentDate(new Date())
-						.currentTime(new Timestamp(new Date().getTime()))
+						.currentTime(ZonedDateTime.now())
 						.sum(2004.001)
 						.build(),
 
@@ -61,9 +63,9 @@ public class MongodbDemoApplication implements ApplicationRunner {
 						.abcGroup("appliances")
 						.abc("freez")
 						.goal("service")
-						.yM("2022-04")
+						.yM(YearMonth.of(2022, 4))
 						.currentDate(new Date())
-						.currentTime(new Timestamp(new Date().getTime()))
+						.currentTime(ZonedDateTime.now())
 						.sum(34.1)
 						.build(),
 
@@ -74,9 +76,9 @@ public class MongodbDemoApplication implements ApplicationRunner {
 						.abcGroup("appliances")
 						.abc("oevn")
 						.goal("service")
-						.yM("2022-04")
+						.yM(YearMonth.of(2022, 4))
 						.currentDate(new Date())
-						.currentTime(new Timestamp(new Date().getTime()))
+						.currentTime(ZonedDateTime.now())
 						.sum(5.1)
 						.build(),
 
@@ -87,9 +89,9 @@ public class MongodbDemoApplication implements ApplicationRunner {
 						.abcGroup("jewelry")
 						.abc("bangle")
 						.goal("service")
-						.yM("2022-04")
+						.yM(YearMonth.of(2022, 4))
 						.currentDate(new Date())
-						.currentTime(new Timestamp(new Date().getTime()))
+						.currentTime(ZonedDateTime.now())
 						.sum(10000.5)
 						.build()
 				)

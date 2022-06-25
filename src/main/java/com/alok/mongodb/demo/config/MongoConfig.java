@@ -1,14 +1,19 @@
 package com.alok.mongodb.demo.config;
 
+import com.alok.mongodb.demo.codec.*;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 
 import java.util.Collection;
 import java.util.Collections;
+
+import static java.util.Arrays.asList;
 
 @Configuration
 public class MongoConfig extends AbstractMongoClientConfiguration {
@@ -36,5 +41,16 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     @Override
     protected boolean autoIndexCreation() {
         return true;
+    }
+
+    @Bean
+    public MongoCustomConversions customConversions() {
+        return new MongoCustomConversions(asList(
+                new YearMonthToStringConverter(),
+                new StringToYearMonthConverter(),
+                new DocumentToYearMonthConverter(),
+                new ZonedDateTimeToDocumentConverter(),
+                new DocumentToZonedDateTimeConverter()
+        ));
     }
 }

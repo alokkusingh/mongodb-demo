@@ -8,6 +8,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.sql.Timestamp;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @ToString
@@ -17,6 +19,8 @@ import java.util.Date;
 public class SampleCollection {
     @Id
     private String id;
+    @Indexed
+    private YearMonth yM;
     private Long sampleId;
     private String sampleName;
     private String department;
@@ -25,9 +29,7 @@ public class SampleCollection {
     private String abc;
     private String status;
     private String goal;
-    @Indexed
-    private String yM;
     private Date currentDate;
-    private Date currentTime;
+    private ZonedDateTime currentTime;
     private Double sum;
 }
