@@ -2,6 +2,8 @@ package com.alok.mongodb.demo;
 
 import com.alok.mongodb.demo.collection.SampleCollection;
 import com.alok.mongodb.demo.repository.SampleCollectionRepository;
+import lombok.Data;
+import lombok.ToString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -41,7 +43,7 @@ public class MongodbDemoApplication implements ApplicationRunner {
 
 		if (numOfCollections == 0) {
 			// using repository to save record
-			sampleCollectionRepository.saveAll(
+			 sampleCollectionRepository.saveAll(
 				Arrays.asList(
 					SampleCollection.builder()
 						.sampleId(12345678L)
@@ -83,6 +85,19 @@ public class MongodbDemoApplication implements ApplicationRunner {
 						.build(),
 
 					SampleCollection.builder()
+							.sampleId(12345778L)
+							.sampleName("Alok Singh")
+							.department("home")
+							.abcGroup("appliances")
+							.abc("oevn")
+							.goal("service")
+							.yM(YearMonth.of(2022, 5))
+							.currentDate(new Date())
+							.currentTime(ZonedDateTime.now())
+							.sum(5.1)
+							.build(),
+
+					SampleCollection.builder()
 						.sampleId(12345679L)
 						.sampleName("Rachna Singh")
 						.department("home")
@@ -93,12 +108,25 @@ public class MongodbDemoApplication implements ApplicationRunner {
 						.currentDate(new Date())
 						.currentTime(ZonedDateTime.now())
 						.sum(10000.5)
-						.build()
+						.build(),
+
+					SampleCollection.builder()
+							.sampleId(12345679L)
+							.sampleName("Saanvi Singh")
+							.department("home")
+							.abcGroup("toys")
+							.abc("soft")
+							.goal("service")
+							.yM(YearMonth.of(2022, 4))
+							.currentDate(new Date())
+							.currentTime(ZonedDateTime.now())
+							.sum(100.0)
+							.build()
 				)
-			);
+			 );
 		} else {
 			// using template to query
-			System.out.println("Get all Alok");
+			/*System.out.println("Get all Alok");
 			List<SampleCollection> records = mongoTemplate.find(Query.query(
 					Criteria.where("sampleName").is("Alok Singh")
 			), SampleCollection.class);
@@ -167,26 +195,78 @@ public class MongodbDemoApplication implements ApplicationRunner {
 					).with(Sort.by("sampleName","abc").descending()).limit(offset).skip(page > 0 ? ( ( page - 1 ) * offset ) : 0),
 					SampleCollection.class)
 					.stream()
-					.forEach(System.out::println);
+					.forEach(System.out::println);*/
 
-			// Agreegate by abc
-			GroupOperation groupByAbcAndSumSum = Aggregation.group("abc")
-					.sum("sum").as("sum");
-			MatchOperation matchYears = Aggregation.match(Criteria.where("yM").in("2022-04", "2022-05"));
-			//ProjectionOperation projectRequired = Aggregation.project("sampleName", "abc", "sum");
-			SortOperation sortByPopDesc = Aggregation.sort(Sort.by(Sort.Direction.DESC, "abc"));
+			// For 2022-04 Aggregate by sampleName and total the sums
+			// stage 1 -  prepare match by yearMonth
+			MatchOperation yearMonthMatchOperation = Aggregation.match(Criteria.where("yM").is("2022-04"));
 
-			//Aggregation aggregation = Aggregation.newAggregation(matchYears, projectRequired);
+			// stage 2/3 - prepare group by sampleName and total the sums
+			GroupOperation sampleNameCountGroupOperation = Aggregation.group("sampleName").count().as("count");
+			GroupOperation sampleNameSumGroupOperation = Aggregation.group("sampleName").sum("sum").as("totalSum");
 
-			Aggregation aggregation = Aggregation.newAggregation(
-					groupByAbcAndSumSum, matchYears, sortByPopDesc);
+			// stage 4 - sort
+			SortOperation sortByNameAscOperation = Aggregation.sort(Sort.Direction.ASC, "sampleName");
 
-			AggregationResults<SampleCollection> aggregationResult = mongoTemplate.aggregate(
-					aggregation, "sampleCollection",
-					SampleCollection.class
-			);
+			// stage 5 - pagination - limit and skip (will be updated during iteration)
+			LimitOperation limitOperation = Aggregation.limit(2); // page size
+			SkipOperation skipOperation = Aggregation.skip(0L);
 
-			aggregationResult.getMappedResults().stream().forEach(System.out::println);
+			// stage 5 - projection
+			ProjectionOperation projectRequiredFiled = null;
+
+			System.out.println("Group by name -> count. Order Desc on name. Get All");
+			mongoTemplate.aggregate(
+					Aggregation.newAggregation(
+							yearMonthMatchOperation,
+							sampleNameCountGroupOperation,
+							sortByNameAscOperation
+					),
+					"sampleCollection",
+					NameCount.class
+			).getMappedResults().stream().forEach(System.out::println);
+
+			System.out.println("Group by name -> sum. Order Desc on name. Get All");
+			System.out.println("Page 1");
+			mongoTemplate.aggregate(
+					Aggregation.newAggregation(
+							yearMonthMatchOperation,
+							sampleNameSumGroupOperation,
+							sortByNameAscOperation,
+							skipOperation,
+							limitOperation
+					),
+					"sampleCollection",
+					NameSum.class
+			).getMappedResults().stream().forEach(System.out::println);
+
+			System.out.println("Page 2");
+			skipOperation = Aggregation.skip(2L);
+			mongoTemplate.aggregate(
+					Aggregation.newAggregation(
+							yearMonthMatchOperation,
+							sampleNameSumGroupOperation,
+							sortByNameAscOperation,
+							skipOperation,
+							limitOperation
+					),
+					"sampleCollection",
+					NameSum.class
+			).getMappedResults().stream().forEach(System.out::println);
 		}
+	}
+
+	@Data
+	@ToString
+	static class NameCount {
+		private String id;
+		private Integer count;
+	}
+
+	@Data
+	@ToString
+	static class NameSum {
+		private String id;
+		private Double totalSum;
 	}
 }
